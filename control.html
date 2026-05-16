@@ -99,10 +99,11 @@ html, body { background: #0f0f1e; font-family: Arial, sans-serif; padding: 16px;
     <span class="ctrl-label">Тайм</span>
     <div class="period-btns">
       <button class="period-btn active" id="pb1" onclick="setPeriod(1)">1-й</button>
-      <button class="period-btn" id="pb2" onclick="setPeriod(2)">2-й</button>
-      <button class="period-btn" id="pb3" onclick="setPeriod(3)">ДВ</button>
-      <button class="period-btn" id="pb4" onclick="setPeriod(4)">Пен</button>
-      <button class="period-btn" id="pb5" onclick="setPeriod(5)">Конец</button>
+      <button class="period-btn" id="pb2" onclick="setPeriod(2)">Перерыв</button>
+      <button class="period-btn" id="pb3" onclick="setPeriod(3)">2-й</button>
+      <button class="period-btn" id="pb4" onclick="setPeriod(4)">ДВ</button>
+      <button class="period-btn" id="pb5" onclick="setPeriod(5)">Пен</button>
+      <button class="period-btn" id="pb6" onclick="setPeriod(6)">Конец</button>
     </div>
   </div>
   <button class="reset-btn" onclick="resetAll()">Сбросить всё</button>
@@ -123,7 +124,7 @@ const app = initializeApp({
 });
 const db = getDatabase(app);
 const scoreRef = ref(db, "score");
-const periods = ["Тайм 1","Тайм 2","Доп. время","Пенальти","Конец"];
+const periods = ["Тайм 1","Перерыв","Тайм 2","Доп. время","Пенальти","Конец"];
 let state = {s1:0, s2:0, period:"Тайм 1", periodIdx:0, timerRunning:false, timerSeconds:0};
 let localIv = null, localElapsed = 0, localRunning = false;
 
@@ -137,7 +138,7 @@ onValue(scoreRef,(snap)=>{
   document.getElementById("s1").textContent=state.s1;
   document.getElementById("s2").textContent=state.s2;
   document.getElementById("pl").textContent=state.period;
-  for(let i=1;i<=5;i++) document.getElementById("pb"+i).classList.toggle("active",i===state.periodIdx+1);
+  for(let i=1;i<=6;i++) document.getElementById("pb"+i).classList.toggle("active",i===state.periodIdx+1);
   const nr=d.timerRunning??false, ne=d.timerSeconds??0;
   if(nr!==localRunning||Math.abs(ne-localElapsed)>2){
     localElapsed=ne; localRunning=nr;
