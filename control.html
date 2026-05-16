@@ -126,9 +126,6 @@ const db = getDatabase(app);
 const scoreRef = ref(db, "score");
 
 const periods = ["Тайм 1","Перерыв","Тайм 2","Доп. время","Пенальти","Конец"];
-// Стартовое время таймера для каждого тайма в секундах
-const periodStartSeconds = [0, 45*60, 45*60, 90*60, 90*60, 90*60];
-
 let state = {s1:0, s2:0, period:"Тайм 1", periodIdx:0, timerRunning:false, timerSeconds:0};
 let localIv = null, localElapsed = 0, localRunning = false;
 
@@ -171,13 +168,9 @@ window.goal=function(team,delta){
 window.setPeriod=function(n){
   state.periodIdx=n-1;
   state.period=periods[state.periodIdx];
-  // Остановить таймер и поставить нужное время
-  localRunning=false;
-  clearInterval(localIv);
-  localElapsed=periodStartSeconds[state.periodIdx];
-  document.getElementById("tmr").textContent=fmt(localElapsed);
-  const btn=document.getElementById("timer-btn");
-  btn.textContent="▶ Старт"; btn.classList.remove("active");
+  // 1-й тайм -> 00:00, 2-й тайм -> 45:00, остальные не трогаем
+  if(n===1){ localRunning=false; clearInterval(localIv); localElapsed=0; document.getElementById("tmr").textContent=fmt(0); document.getElementById("timer-btn").textContent="▶ Старт"; document.getElementById("timer-btn").classList.remove("active"); }
+  if(n===3){ localRunning=false; clearInterval(localIv); localElapsed=45*60; document.getElementById("tmr").textContent=fmt(45*60); document.getElementById("timer-btn").textContent="▶ Старт"; document.getElementById("timer-btn").classList.remove("active"); }
   save();
 };
 
@@ -196,10 +189,10 @@ window.toggleTimer=function(){
 
 window.resetTimer=function(){
   localRunning=false; clearInterval(localIv);
-  localElapsed=periodStartSeconds[state.periodIdx];
+  localElapsed=0;
   document.getElementById("timer-btn").textContent="▶ Старт";
   document.getElementById("timer-btn").classList.remove("active");
-  document.getElementById("tmr").textContent=fmt(localElapsed);
+  document.getElementById("tmr").textContent=fmt(0);
   save();
 };
 
