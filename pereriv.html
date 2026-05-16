@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Перерыв</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1280px; height: 720px; overflow: hidden; font-family: Arial, sans-serif; }
+.bg {
+  width: 1280px; height: 720px;
+  background: linear-gradient(135deg, #dce3ea 0%, #f0f4f8 40%, #e2e8ef 100%);
+  position: relative;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.stadium-overlay {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 110%, rgba(180,200,220,0.5) 0%, transparent 70%),
+    radial-gradient(ellipse at 0% 50%, rgba(200,215,230,0.3) 0%, transparent 50%),
+    radial-gradient(ellipse at 100% 50%, rgba(200,215,230,0.3) 0%, transparent 50%);
+}
+.lines {
+  position: absolute; inset: 0;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.15) 0px, rgba(255,255,255,0.15) 1px, transparent 1px, transparent 80px),
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.1) 0px, rgba(255,255,255,0.1) 1px, transparent 1px, transparent 80px);
+}
+.content {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column;
+  align-items: center; width: 100%;
+}
+.title-small { font-size: 18px; font-weight: 400; color: #4a5568; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 4px; }
+.title-big { font-size: 44px; font-weight: 800; color: #1a2744; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 2px; }
+.title-sub { font-size: 18px; font-weight: 400; color: #4a5568; letter-spacing: 6px; text-transform: uppercase; margin-bottom: 32px; }
+.divider { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; }
+.divider-line { width: 120px; height: 1px; background: linear-gradient(90deg, transparent, #8a9bb5, transparent); }
+.ball { font-size: 28px; color: #1a2744; opacity: 0.7; }
+.teams { display: flex; align-items: center; justify-content: center; width: 100%; margin-bottom: 32px; }
+.team { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 300px; }
+.team-logo { width: 100px; height: 100px; object-fit: contain; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15)); }
+.team-name { font-size: 15px; font-weight: 700; color: #1a2744; letter-spacing: 2px; text-transform: uppercase; text-align: center; }
+.vs-block { width: 100px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.vs { font-size: 36px; font-weight: 800; color: #1a2744; opacity: 0.25; letter-spacing: 2px; }
+.soon-wrap { display: flex; align-items: center; gap: 20px; }
+.soon-line { width: 80px; height: 1px; background: #8a9bb5; }
+.soon { font-size: 16px; font-weight: 700; color: #4a5568; letter-spacing: 6px; text-transform: uppercase; }
+</style>
+</head>
+<body>
+<div class="bg">
+  <div class="stadium-overlay"></div>
+  <div class="lines"></div>
+  <div class="content">
+    <div class="title-small">Первенство</div>
+    <div class="title-big">Московской области</div>
+    <div class="title-sub">по футболу</div>
+    <div class="divider">
+      <div class="divider-line"></div>
+      <div class="ball">⚽</div>
+      <div class="divider-line"></div>
+    </div>
+    <div class="teams">
+      <div class="team">
+        <span class="team-name">СШ Дубна</span>
+      </div>
+      <div class="vs-block"><span class="vs">VS</span></div>
+      <div class="team">
+        <span class="team-name">ФК Заря-Телекомкрипт</span>
+      </div>
+    </div>
+    <div class="soon-wrap">
+      <div class="soon-line"></div>
+      <div class="soon">Перерыв</div>
+      <div class="soon-line"></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
