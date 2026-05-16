@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Управление</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #0f0f1e; font-family: Arial, sans-serif; padding: 16px; }
+
+  .preview {
+    display: flex;
+    align-items: center;
+    background: rgba(255,255,255,0.06);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.12);
+    margin-bottom: 20px;
+  }
+  .p-team { padding: 10px 14px; flex: 1; }
+  .p-name { font-size: 15px; font-weight: 500; color: #fff; white-space: nowrap; }
+  .p-score-block {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.08);
+    padding: 10px 14px;
+    border-left: 1px solid rgba(255,255,255,0.1);
+    border-right: 1px solid rgba(255,255,255,0.1);
+  }
+  .p-score { font-size: 26px; font-weight: 600; color: #fff; min-width: 22px; text-align: center; }
+  .p-sep { font-size: 20px; color: rgba(255,255,255,0.4); }
+  .p-period {
+    background: #c0392b; color: #fff;
+    font-size: 10px; font-weight: 600;
+    padding: 3px 8px; border-radius: 4px;
+    white-space: nowrap; margin-left: 4px;
+  }
+
+  .controls { display: flex; flex-direction: column; gap: 12px; }
+  .ctrl-row { display: flex; align-items: center; gap: 10px; }
+  .ctrl-label { font-size: 13px; color: rgba(255,255,255,0.7); min-width: 90px; white-space: nowrap; }
+  .btn {
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-size: 20px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 500;
+    min-width: 56px;
+  }
+  .btn:active { transform: scale(0.95); }
+  .btn.green { background: #1a7a4a; border-color: #1a7a4a; }
+  .btn.red { background: transparent; color: #e74c3c; border-color: #e74c3c; }
+  .period-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .period-btn {
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.8);
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .period-btn.active { background: #c0392b; color: #fff; border-color: #c0392b; }
+  .reset-btn {
+    font-size: 12px; color: rgba(255,255,255,0.4);
+    background: none; border: none; cursor: pointer;
+    text-decoration: underline; font-family: inherit;
+    padding: 4px 0; text-align: left;
+  }
+  .status {
+    font-size: 11px; color: rgba(255,255,255,0.3);
+    margin-top: 8px; text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="preview">
+  <div class="p-team"><span class="p-name">СШ Дубна</span></div>
+  <div class="p-score-block">
+    <span class="p-score" id="s1">0</span>
+    <span class="p-sep">:</span>
+    <span class="p-score" id="s2">0</span>
+    <span class="p-period" id="period-label">Тайм 1</span>
+  </div>
+  <div class="p-team" style="text-align:right"><span class="p-name">ФК Заря</span></div>
+</div>
+
+<div class="controls">
+  <div class="ctrl-row">
+    <span class="ctrl-label">СШ Дубна</span>
+    <button class="btn green" onclick="goal(1,1)">+1</button>
+    <button class="btn red" onclick="goal(1,-1)">−1</button>
+  </div>
+  <div class="ctrl-row">
+    <span class="ctrl-label">ФК Заря</span>
+    <button class="btn green" onclick="goal(2,1)">+1</button>
+    <button class="btn red" onclick="goal(2,-1)">−1</button>
+  </div>
+  <div class="ctrl-row">
+    <span class="ctrl-label">Тайм</span>
+    <div class="period-btns">
+      <button class="period-btn active" id="pb1" onclick="setPeriod(1)">1-й</button>
+      <button class="period-btn" id="pb2" onclick="setPeriod(2)">2-й</button>
+      <button class="period-btn" id="pb3" onclick="setPeriod(3)">ДВ</button>
+      <button class="period-btn" id="pb4" onclick="setPeriod(4)">Пен</button>
+      <button class="period-btn" id="pb5" onclick="setPeriod(5)">Конец</button>
+    </div>
+  </div>
+  <button class="reset-btn" onclick="resetAll()">Сбросить счёт</button>
+</div>
+<p class="status" id="status">Подключение...</p>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const app = initializeApp({
+    apiKey: "AIzaSyAVcqA4WEKS67HMLTHm85OZT-pQ4daVhvg",
+    authDomain: "scoreboard-66c2a.firebaseapp.com",
+    databaseURL: "https://scoreboard-66c2a-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "scoreboard-66c2a",
+    storageBucket: "scoreboard-66c2a.appspot.com",
+    messagingSenderId: "1053393288052",
+    appId: "1:1053393288052:web:fe024b201931c947f18a21"
+  });
+
+  const db = getDatabase(app);
+  const scoreRef = ref(db, 'score');
+  const periods = ['Тайм 1','Тайм 2','Доп. время','Пенальти','Конец'];
+
+  var state = { s1: 0, s2: 0, period: 'Тайм 1', periodIdx: 0 };
+
+  onValue(scoreRef, (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      state.s1 = data.s1 ?? 0;
+      state.s2 = data.s2 ?? 0;
+      state.period = data.period ?? 'Тайм 1';
+      state.periodIdx = periods.indexOf(state.period);
+      document.getElementById('s1').textContent = state.s1;
+      document.getElementById('s2').textContent = state.s2;
+      document.getElementById('period-label').textContent = state.period;
+      for (var i = 1; i <= 5; i++) {
+        document.getElementById('pb' + i).classList.toggle('active', i === state.periodIdx + 1);
+      }
+    }
+    document.getElementById('status').textContent = 'Подключено';
+  });
+
+  function save() {
+    set(scoreRef, { s1: state.s1, s2: state.s2, period: state.period });
+  }
+
+  window.goal = function(team, delta) {
+    var key = 's' + team;
+    state[key] = Math.max(0, (state[key] || 0) + delta);
+    save();
+  };
+
+  window.setPeriod = function(n) {
+    state.periodIdx = n - 1;
+    state.period = periods[state.periodIdx];
+    save();
+  };
+
+  window.resetAll = function() {
+    state = { s1: 0, s2: 0, period: 'Тайм 1', periodIdx: 0 };
+    save();
+  };
+</script>
+</body>
+</html>
