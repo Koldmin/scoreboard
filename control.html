@@ -112,7 +112,7 @@ html, body { background: #0f0f1e; font-family: Arial, sans-serif; padding: 16px;
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, onValue, set, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 const app = initializeApp({
   apiKey:"AIzaSyAVcqA4WEKS67HMLTHm85OZT-pQ4daVhvg",
   authDomain:"scoreboard-66c2a.firebaseapp.com",
@@ -124,17 +124,22 @@ const app = initializeApp({
 });
 const db = getDatabase(app);
 const scoreRef = ref(db, "score");
+
 const periods = ["Тайм 1","Перерыв","Тайм 2","Доп. время","Пенальти","Конец"];
+// Стартовое время таймера для каждого тайма в секундах
+const periodStartSeconds = [0, 45*60, 45*60, 90*60, 90*60, 90*60];
+
 let state = {s1:0, s2:0, period:"Тайм 1", periodIdx:0, timerRunning:false, timerSeconds:0};
 let localIv = null, localElapsed = 0, localRunning = false;
 
-function fmt(s){return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");}
+function fmt(s){ return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0"); }
 
 onValue(scoreRef,(snap)=>{
   const d=snap.val(); if(!d) return;
   state.s1=d.s1??0; state.s2=d.s2??0;
   state.period=d.period??"Тайм 1";
   state.periodIdx=periods.indexOf(state.period);
+  if(state.periodIdx<0) state.periodIdx=0;
   document.getElementById("s1").textContent=state.s1;
   document.getElementById("s2").textContent=state.s2;
   document.getElementById("pl").textContent=state.period;
@@ -145,26 +150,66 @@ onValue(scoreRef,(snap)=>{
     clearInterval(localIv);
     document.getElementById("tmr").textContent=fmt(localElapsed);
     const btn=document.getElementById("timer-btn");
-    if(localRunning){ btn.textContent="⏸ Пауза"; btn.classList.add("active"); localIv=setInterval(()=>{localElapsed++;document.getElementById("tmr").textContent=fmt(localElapsed);},1000); }
-    else { btn.textContent="▶ Старт"; btn.classList.remove("active"); }
+    if(localRunning){
+      btn.textContent="⏸ Пауза"; btn.classList.add("active");
+      localIv=setInterval(()=>{ localElapsed++; document.getElementById("tmr").textContent=fmt(localElapsed); },1000);
+    } else {
+      btn.textContent="▶ Старт"; btn.classList.remove("active");
+    }
   }
   document.getElementById("status").textContent="Подключено";
 });
 
-function save(){ set(scoreRef,{s1:state.s1,s2:state.s2,period:state.period,timerRunning:localRunning,timerSeconds:localElapsed}); }
+function save(){
+  set(scoreRef,{s1:state.s1,s2:state.s2,period:state.period,timerRunning:localRunning,timerSeconds:localElapsed});
+}
 
-window.goal=function(team,delta){ const k="s"+team; state[k]=Math.max(0,(state[k]||0)+delta); save(); };
-window.setPeriod=function(n){ state.periodIdx=n-1; state.period=periods[state.periodIdx]; save(); };
+window.goal=function(team,delta){
+  const k="s"+team; state[k]=Math.max(0,(state[k]||0)+delta); save();
+};
+
+window.setPeriod=function(n){
+  state.periodIdx=n-1;
+  state.period=periods[state.periodIdx];
+  // Остановить таймер и поставить нужное время
+  localRunning=false;
+  clearInterval(localIv);
+  localElapsed=periodStartSeconds[state.periodIdx];
+  document.getElementById("tmr").textContent=fmt(localElapsed);
+  const btn=document.getElementById("timer-btn");
+  btn.textContent="▶ Старт"; btn.classList.remove("active");
+  save();
+};
+
 window.toggleTimer=function(){
   localRunning=!localRunning;
   clearInterval(localIv);
   const btn=document.getElementById("timer-btn");
-  if(localRunning){ btn.textContent="⏸ Пауза"; btn.classList.add("active"); localIv=setInterval(()=>{localElapsed++;document.getElementById("tmr").textContent=fmt(localElapsed);},1000); }
-  else { btn.textContent="▶ Старт"; btn.classList.remove("active"); }
+  if(localRunning){
+    btn.textContent="⏸ Пауза"; btn.classList.add("active");
+    localIv=setInterval(()=>{ localElapsed++; document.getElementById("tmr").textContent=fmt(localElapsed); },1000);
+  } else {
+    btn.textContent="▶ Старт"; btn.classList.remove("active");
+  }
   save();
 };
-window.resetTimer=function(){ localRunning=false; localElapsed=0; clearInterval(localIv); document.getElementById("timer-btn").textContent="▶ Старт"; document.getElementById("timer-btn").classList.remove("active"); document.getElementById("tmr").textContent="00:00"; save(); };
-window.resetAll=function(){ localRunning=false; localElapsed=0; clearInterval(localIv); state={s1:0,s2:0,period:"Тайм 1",periodIdx:0,timerRunning:false,timerSeconds:0}; document.getElementById("timer-btn").textContent="▶ Старт"; document.getElementById("timer-btn").classList.remove("active"); save(); };
+
+window.resetTimer=function(){
+  localRunning=false; clearInterval(localIv);
+  localElapsed=periodStartSeconds[state.periodIdx];
+  document.getElementById("timer-btn").textContent="▶ Старт";
+  document.getElementById("timer-btn").classList.remove("active");
+  document.getElementById("tmr").textContent=fmt(localElapsed);
+  save();
+};
+
+window.resetAll=function(){
+  localRunning=false; localElapsed=0; clearInterval(localIv);
+  state={s1:0,s2:0,period:"Тайм 1",periodIdx:0,timerRunning:false,timerSeconds:0};
+  document.getElementById("timer-btn").textContent="▶ Старт";
+  document.getElementById("timer-btn").classList.remove("active");
+  save();
+};
 </script>
 </body>
 </html>
