@@ -157,8 +157,10 @@ onValue(scoreRef,(snap)=>{
   document.getElementById("status").textContent="Подключено";
 });
 
-function save(){
-  set(scoreRef,{s1:state.s1,s2:state.s2,period:state.period,timerRunning:localRunning,timerSeconds:localElapsed});
+function save(cmd){
+  const data = {s1:state.s1,s2:state.s2,period:state.period};
+  if(cmd) { data.timerCmd=cmd; data.timerSeconds=localElapsed; }
+  set(scoreRef, data);
 }
 
 window.goal=function(team,delta){
@@ -166,12 +168,10 @@ window.goal=function(team,delta){
 };
 
 window.setPeriod=function(n){
-  state.periodIdx=n-1;
-  state.period=periods[state.periodIdx];
-  // 1-й тайм -> 00:00, 2-й тайм -> 45:00, остальные не трогаем
-  if(n===1){ localRunning=false; clearInterval(localIv); localElapsed=0; document.getElementById("tmr").textContent=fmt(0); document.getElementById("timer-btn").textContent="▶ Старт"; document.getElementById("timer-btn").classList.remove("active"); }
-  if(n===3){ localRunning=false; clearInterval(localIv); localElapsed=45*60; document.getElementById("tmr").textContent=fmt(45*60); document.getElementById("timer-btn").textContent="▶ Старт"; document.getElementById("timer-btn").classList.remove("active"); }
-  save();
+  state.periodIdx=n-1; state.period=periods[state.periodIdx];
+  if(n===1){ localRunning=false; clearInterval(localIv); localElapsed=0; document.getElementById("tmr").textContent=fmt(0); document.getElementById("timer-btn").textContent="▶ Старт"; document.getElementById("timer-btn").classList.remove("active"); save("reset"); }
+  else if(n===3){ localRunning=false; clearInterval(localIv); localElapsed=45*60; document.getElementById("tmr").textContent=fmt(45*60); document.getElementById("timer-btn").textContent="▶ Старт"; document.getElementById("timer-btn").classList.remove("active"); save("reset"); }
+  else save(null);
 };
 
 window.toggleTimer=function(){
@@ -181,10 +181,11 @@ window.toggleTimer=function(){
   if(localRunning){
     btn.textContent="⏸ Пауза"; btn.classList.add("active");
     localIv=setInterval(()=>{ localElapsed++; document.getElementById("tmr").textContent=fmt(localElapsed); },1000);
+    save("start");
   } else {
     btn.textContent="▶ Старт"; btn.classList.remove("active");
+    save("stop");
   }
-  save();
 };
 
 window.resetTimer=function(){
@@ -193,7 +194,7 @@ window.resetTimer=function(){
   document.getElementById("timer-btn").textContent="▶ Старт";
   document.getElementById("timer-btn").classList.remove("active");
   document.getElementById("tmr").textContent=fmt(0);
-  save();
+  save("reset");
 };
 
 window.resetAll=function(){
