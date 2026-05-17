@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Табло</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: transparent; }
+.board {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(15,15,30,0.88);
+  border-radius: 8px;
+  overflow: hidden;
+  font-family: Arial, sans-serif;
+  border: 1px solid rgba(255,255,255,0.12);
+  position: fixed;
+  top: 16px; left: 16px;
+}
+.team { display: flex; align-items: center; gap: 8px; padding: 8px 12px; }
+.logo { width: 36px; height: 36px; object-fit: contain; }
+.team-name { font-size: 16px; font-weight: 500; color: #fff; white-space: nowrap; }
+.score-block {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  background: rgba(255,255,255,0.08); padding: 8px 14px;
+  border-left: 1px solid rgba(255,255,255,0.1);
+  border-right: 1px solid rgba(255,255,255,0.1);
+}
+.scores-row { display: flex; align-items: center; gap: 6px; }
+.score { font-size: 30px; font-weight: 600; color: #fff; min-width: 26px; text-align: center; }
+.sep { font-size: 24px; color: rgba(255,255,255,0.45); }
+.info-row { display: flex; align-items: center; gap: 8px; }
+.period { background: #c0392b; color: #fff; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; white-space: nowrap; }
+.timer { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.85); }
+</style>
+</head>
+<body>
+<div class="board">
+  <div class="team">
+    <img class="logo" id="logo1" src="" alt="">
+    <span class="team-name" id="name1">Команда 1</span>
+  </div>
+  <div class="score-block">
+    <div class="scores-row">
+      <span class="score" id="s1">0</span>
+      <span class="sep">:</span>
+      <span class="score" id="s2">0</span>
+    </div>
+    <div class="info-row">
+      <span class="period" id="pl">Тайм 1</span>
+      <span class="timer" id="tmr">00:00</span>
+    </div>
+  </div>
+  <div class="team">
+    <span class="team-name" id="name2">Команда 2</span>
+    <img class="logo" id="logo2" src="" alt="">
+  </div>
+</div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+const app = initializeApp({
+  apiKey:"AIzaSyAVcqA4WEKS67HMLTHm85OZT-pQ4daVhvg",
+  authDomain:"scoreboard-66c2a.firebaseapp.com",
+  databaseURL:"https://scoreboard-66c2a-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"scoreboard-66c2a",
+  storageBucket:"scoreboard-66c2a.appspot.com",
+  messagingSenderId:"1053393288052",
+  appId:"1:1053393288052:web:fe024b201931c947f18a21"
+});
+const db = getDatabase(app);
+const scoreRef = ref(db, "score2");
+let iv=null, elapsed=0, running=false;
+function fmt(s){return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");}
+onValue(scoreRef,(snap)=>{
+  const d=snap.val(); if(!d) return;
+  document.getElementById("s1").textContent=d.s1??0;
+  document.getElementById("s2").textContent=d.s2??0;
+  document.getElementById("pl").textContent=d.period??"Тайм 1";
+  document.getElementById("name1").textContent=d.team1??"Команда 1";
+  document.getElementById("name2").textContent=d.team2??"Команда 2";
+  document.getElementById("logo1").src=d.logo1??"";
+  document.getElementById("logo2").src=d.logo2??"";
+  const nr=d.timerRunning??false, ne=d.timerSeconds??0;
+  if(nr!==running||Math.abs(ne-elapsed)>2){
+    elapsed=ne; running=nr; clearInterval(iv);
+    document.getElementById("tmr").textContent=fmt(elapsed);
+    if(running) iv=setInterval(()=>{elapsed++;document.getElementById("tmr").textContent=fmt(elapsed);},1000);
+  }
+});
+</script>
+</body>
+</html>
