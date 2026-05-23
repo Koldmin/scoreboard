@@ -31,7 +31,7 @@ html, body { background: transparent; }
 .sep { font-size: 24px; color: rgba(255,255,255,0.45); }
 .info-row { display: flex; align-items: center; gap: 8px; }
 .period { background: #c0392b; color: #fff; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; white-space: nowrap; }
-.timer { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.85); }
+
 </style>
 </head>
 <body>
@@ -48,7 +48,6 @@ html, body { background: transparent; }
     </div>
     <div class="info-row">
       <span class="period" id="pl">Тайм 1</span>
-      <span class="timer" id="tmr">00:00</span>
     </div>
   </div>
   <div class="team">
@@ -71,10 +70,6 @@ const app = initializeApp({
 const db = getDatabase(app);
 const scoreRef = ref(db, "score2");
 
-// Локальный таймер - не зависит от интернета
-let iv=null, elapsed=0, running=false;
-function fmt(s){return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");}
-
 onValue(scoreRef,(snap)=>{
   const d=snap.val(); if(!d) return;
   document.getElementById("s1").textContent=d.s1??0;
@@ -84,12 +79,6 @@ onValue(scoreRef,(snap)=>{
   document.getElementById("name2").textContent=d.team2??"Команда 2";
   document.getElementById("logo1").src=d.logo1??"";
   document.getElementById("logo2").src=d.logo2??"";
-  // Только команды управления таймером
-  const cmd=d.timerCmd??"stop";
-  const ne=d.timerSeconds??0;
-  if(cmd==="reset"){ clearInterval(iv); elapsed=ne; running=false; document.getElementById("tmr").textContent=fmt(elapsed); }
-  else if(cmd==="start" && !running){ running=true; clearInterval(iv); iv=setInterval(()=>{elapsed++;document.getElementById("tmr").textContent=fmt(elapsed);},1000); }
-  else if(cmd==="stop" && running){ running=false; clearInterval(iv); }
 });
 </script>
 </body>
